@@ -14,7 +14,14 @@ export function analyzeSlots(extracted, url) {
   const title = clean(extracted.title);
   const h1 = clean(extracted.h1s[0] || '');
   const metaDesc = clean(extracted.metaDesc);
-  const bodyText = clean(extracted.bodyText);
+  // Body text keeps its newlines: the extractor emits one at every block-level
+  // boundary, and those newlines are what stop an n-gram from running across a
+  // card, list item or paragraph edge. Collapsing them (as the single-line slots
+  // do) would silently let phrases straddle unrelated blocks.
+  const bodyText = decodeHtml(String(extracted.bodyText || ''))
+    .replace(/[^\S\n]+/g, ' ')
+    .replace(/ *\n[\s\n]*/g, '\n')
+    .trim();
   const lang = extracted.lang || '';
   let slug = '/';
   try { slug = new URL(url).pathname; } catch { /* keep default */ }

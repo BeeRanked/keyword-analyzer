@@ -8,7 +8,20 @@ export function isSafeUrl(u) {
     const url = new URL(u);
     if (url.protocol !== 'http:' && url.protocol !== 'https:') return false;
     const h = url.hostname.toLowerCase();
+    // IPv6 literal (URL keeps the brackets). Block loopback (::1), unspecified
+    // (::), link-local (fe80::/10), unique-local (fc00::/7) and any IPv4-mapped
+    // address (::ffff:.../96), which can smuggle a private v4 in v6 clothing.
+    if (h.startsWith('[')) {
+      const v6 = h.slice(1, -1);
+      if (v6 === '::1' || v6 === '::') return false;
+      if (/^fe[89ab][0-9a-f]:/.test(v6)) return false;
+      if (/^f[cd][0-9a-f][0-9a-f]:/.test(v6)) return false;
+      if (/^::ffff:/i.test(v6)) return false;
+      return true;
+    }
     if (h === 'localhost' || h.endsWith('.local') || h.endsWith('.internal')) return false;
+    // Integer, hex and octal IPv4 are normalized to dotted-decimal by URL, so
+    // these dotted-form checks catch every notation.
     if (/^(127\.|10\.|192\.168\.|169\.254\.|0\.)/.test(h)) return false;
     if (/^172\.(1[6-9]|2\d|3[01])\./.test(h)) return false;
     return true;
@@ -29,7 +42,8 @@ export async function fetchHtml(url, opts = {}) {
     throw new Error('That page took too long or refused the request; it may be slow or blocking automated visits.');
   }
   if (!res.ok) throw new Error(`That page returned HTTP ${res.status}, so there is nothing to read.`);
-  if (!/text\/html/i.test(res.headers.get('content-type') || '')) throw new Error('That URL is not an HTML page.');
+  if (!/text\/html|application\/xhtml\+xml/i.test(res.headers.get('content-type') || '')) throw new Error('That URL is not an HTML page.');
+  if (!res.body) return '';
 
   const reader = res.body.getReader();
   const dec = new TextDecoder('utf-8', { fatal: false });

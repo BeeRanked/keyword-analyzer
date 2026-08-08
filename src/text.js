@@ -149,7 +149,21 @@ export function rank(map, slotTokens, minCount, limit) {
   return out.slice(0, limit);
 }
 
+/** Is the word sequence of `shortTerm` a contiguous run inside `longTerm`? Word
+ *  based on purpose, so "online store" is not treated as part of "online
+ *  storefront" (a substring match would wrongly merge two different terms). */
+function wordsContained(shortTerm, longTerm) {
+  const a = shortTerm.split(' ');
+  const b = longTerm.split(' ');
+  for (let i = 0; i + a.length <= b.length; i++) {
+    let ok = true;
+    for (let j = 0; j < a.length; j++) if (b[i + j] !== a[j]) { ok = false; break; }
+    if (ok) return true;
+  }
+  return false;
+}
+
 /** Drop a short phrase that is really just a fragment of a stronger longer one. */
 export function dedupeContained(shorter, longer) {
-  return shorter.filter((s) => !longer.some((l) => l.score >= s.score && l.term.includes(s.term) && l.count >= s.count * 0.8));
+  return shorter.filter((s) => !longer.some((l) => l.score >= s.score && wordsContained(s.term, l.term) && l.count >= s.count * 0.8));
 }

@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { analyzeHtml, extractSlots } from '../src/index.js';
-import { tokenize, countTerms, stopwordsFor, buildFoldMap, decodeHtml } from '../src/text.js';
+import { isSafeUrl } from '../src/fetch-page.js';
+import { tokenize, countTerms, stopwordsFor, buildFoldMap, decodeHtml, dedupeContained } from '../src/text.js';
 
 test('tokenize splits on punctuation and never straddles boundaries', () => {
   const toks = tokenize('Fast, reliable hosting. Reliable support!');
@@ -55,6 +56,49 @@ test('extractSlots pulls slots and does not concatenate adjacent cards', () => {
   assert.ok(!toks.includes('azizstartup'), 'adjacent anchors must not concatenate');
   // nav/footer text is excluded from body flow.
   assert.ok(!s.bodyText.toLowerCase().includes('ignore me nav'));
+});
+
+test('phrases do not run across card or paragraph boundaries', () => {
+  const html = `<!doctype html><html lang="en"><head><title>t</title></head><body><main>
+    <div class="card"><a href="/a">Blue Widgets</a></div>
+    <div class="card"><a href="/b">Green Sprockets</a></div>
+  </main></body></html>`;
+  const r = analyzeHtml(html, 'https://x.example/');
+  const phrases = r.phrases.map((p) => p.term);
+  assert.ok(!phrases.includes('widgets green'), 'no bigram spanning two cards');
+  assert.ok(phrases.includes('blue widgets') || r.terms.some((t) => t.term === 'widgets'), 'within-card content still counted');
+});
+
+test('inline emphasis mid-sentence does not split a phrase', () => {
+  const html = `<!doctype html><html lang="en"><head><title>t</title></head><body><main>
+    <p>the <strong>best</strong> managed hosting, the best managed hosting</p>
+  </main></body></html>`;
+  const r = analyzeHtml(html, 'https://x.example/');
+  const terms = [...r.phrases, ...r.terms].map((p) => p.term);
+  assert.ok(terms.some((t) => t.includes('best managed')), 'phrase survives the <strong> wrapper');
+});
+
+test('nav and footer links are excluded from the anchor slot', () => {
+  const html = `<!doctype html><html lang="en"><head><title>t</title></head><body>
+    <nav><a href="/p">Pricing Nav</a></nav>
+    <main><p>Body about hosting.</p><a href="/x">Real Body Link</a></main>
+    <footer><a href="/c">Footer Contact</a></footer></body></html>`;
+  const s = extractSlots(html);
+  const anchors = s.anchors.join(' | ');
+  assert.ok(!/Pricing Nav|Footer Contact/.test(anchors), 'nav/footer anchors dropped');
+  assert.ok(/Real Body Link/.test(anchors), 'main-content anchor kept');
+});
+
+test('dedupeContained matches whole words, not substrings', () => {
+  const shorter = [{ term: 'online store', count: 5, score: 5 }];
+  assert.equal(dedupeContained(shorter, [{ term: 'online storefront', count: 6, score: 6 }]).length, 1, 'distinct term kept');
+  assert.equal(dedupeContained(shorter, [{ term: 'best online store', count: 6, score: 6 }]).length, 0, 'true fragment dropped');
+});
+
+test('isSafeUrl blocks IPv6 private forms', () => {
+  assert.equal(isSafeUrl('http://[::1]/'), false);
+  assert.equal(isSafeUrl('http://[::ffff:127.0.0.1]/'), false);
+  assert.equal(isSafeUrl('https://example.com/'), true);
 });
 
 test('analyzeHtml ranks a clear theme first and records placements', () => {

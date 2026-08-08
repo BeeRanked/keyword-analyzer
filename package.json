@@ -15,7 +15,8 @@
   "files": [
     "src",
     "bin",
-    "worker.js"
+    "worker.js",
+    "wrangler.toml.example"
   ],
   "scripts": {
     "test": "node --test"

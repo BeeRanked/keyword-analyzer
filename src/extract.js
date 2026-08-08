@@ -13,6 +13,7 @@ import { parse } from 'node-html-parser';
 // prose does mid-word.
 const INLINE = new Set(['em', 'strong', 'b', 'i', 'code', 'small', 'sup', 'sub', 'mark', 'u', 'abbr', 'time', 's', 'q', 'cite', 'var', 'kbd']);
 const EXCLUDE = new Set(['script', 'style', 'noscript', 'template', 'svg', 'iframe', 'object', 'form', 'nav', 'footer', 'aside']);
+const EXCLUDE_SELECTOR = [...EXCLUDE].join(', ');
 
 const NODE_TEXT = 3;
 const NODE_ELEMENT = 1;
@@ -44,6 +45,12 @@ export function extractSlots(html) {
     comment: false,
     blockTextElements: { script: false, style: false, noscript: false },
   });
+
+  // Drop furniture (script/style and nav/footer/aside/form) from the tree up
+  // front, so it is excluded from BOTH the body-text walk and the slot
+  // collectors below. Otherwise nav and footer links would still pollute the
+  // anchor/heading/alt slots and inflate a term's placement score.
+  for (const el of root.querySelectorAll(EXCLUDE_SELECTOR)) el.remove();
 
   const title = textOf(root.querySelector('title')).trim();
   const lang = root.querySelector('html')?.getAttribute('lang') || '';
