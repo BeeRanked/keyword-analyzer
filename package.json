@@ -1,0 +1,44 @@
+{
+  "name": "keyword-analyzer",
+  "version": "0.1.0",
+  "description": "See the words and phrases a web page actually emphasises, and exactly where each one appears: title, meta description, URL, headings, intro, image alt text and link anchors. Counts and placements only, no fabricated search-volume numbers.",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./extract": "./src/extract.js",
+    "./text": "./src/text.js"
+  },
+  "bin": {
+    "keyword-analyzer": "bin/cli.js"
+  },
+  "files": [
+    "src",
+    "bin",
+    "worker.js"
+  ],
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [
+    "seo",
+    "keywords",
+    "on-page-seo",
+    "content-analysis",
+    "ngram",
+    "tf",
+    "text-analysis"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "node-html-parser": "^6.1.13"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BeeRanked/keyword-analyzer.git"
+  },
+  "homepage": "https://beeranked.online/keyword-analyzer"
+}

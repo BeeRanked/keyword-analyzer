@@ -1,0 +1,4 @@
+# Copy to wrangler.toml and deploy with `npx wrangler deploy`.
+name = "keyword-analyzer"
+main = "worker.js"
+compatibility_date = "2024-11-01"
