@@ -1,0 +1,28 @@
+# Publishes to npm via trusted publishing (OIDC): no tokens, and npm attaches
+# provenance attestations automatically. The trusted publisher configured on
+# npmjs.com must name this exact file (publish.yml).
+name: Publish to npm
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # required for OIDC trusted publishing
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      # Trusted publishing needs npm 11.5.1+; the runner's bundled npm may lag.
+      - run: npm install -g npm@latest
+      - run: npm install --no-audit --no-fund
+      - run: npm test
+      - run: npm publish
