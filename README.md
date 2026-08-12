@@ -26,8 +26,8 @@ No API key, no browser. Runs as a library, a CLI, or a self-hosted HTTP endpoint
 ## Install
 
 ```bash
-npm install keyword-analyzer
-npx keyword-analyzer https://example.com/some-page
+npm install @beeranked/keyword-analyzer
+npx @beeranked/keyword-analyzer https://example.com/some-page
 ```
 
 Requires Node 18 or newer.
@@ -42,7 +42,7 @@ keyword-analyzer https://example.com/pricing --json
 ## Library
 
 ```js
-import { analyzeUrl, analyzeHtml } from 'keyword-analyzer';
+import { analyzeUrl, analyzeHtml } from '@beeranked/keyword-analyzer';
 
 const report = await analyzeUrl('https://example.com/pricing');
 console.log(report.primary);   // the strongest phrase on the page
@@ -54,7 +54,7 @@ console.log(report.page);      // words, headings, images, links, slug, lang
 const offline = analyzeHtml('<html>...</html>', 'https://example.com/pricing');
 ```
 
-The tokeniser and counters are exported from `keyword-analyzer/text` if you want
+The tokeniser and counters are exported from `@beeranked/keyword-analyzer/text` if you want
 to build on them.
 
 ## The eight slots

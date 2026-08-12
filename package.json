@@ -1,5 +1,5 @@
 {
-  "name": "keyword-analyzer",
+  "name": "@beeranked/keyword-analyzer",
   "version": "0.1.0",
   "description": "See the words and phrases a web page actually emphasises, and exactly where each one appears: title, meta description, URL, headings, intro, image alt text and link anchors. Counts and placements only, no fabricated search-volume numbers.",
   "type": "module",
@@ -41,5 +41,8 @@
     "type": "git",
     "url": "git+https://github.com/BeeRanked/keyword-analyzer.git"
   },
-  "homepage": "https://beeranked.online/keyword-analyzer"
+  "homepage": "https://beeranked.online/keyword-analyzer",
+  "publishConfig": {
+    "access": "public"
+  }
 }
